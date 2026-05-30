@@ -1,7 +1,9 @@
 import { dblpIndex } from '@/lib/meilisearch'
+import { toBibtex } from '@/lib/bibtex'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { BibtexButton } from './bibtex-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -116,6 +118,12 @@ export default async function PaperDetailPage({ params }: Props) {
               </div>
             </div>
           )}
+
+          {/* BibTeX */}
+          <div className="px-6 py-4 border-b border-[#f0ebe4]">
+            <h2 className="text-xs font-semibold text-[#8a7e72] uppercase tracking-wider mb-3">Cite this paper</h2>
+            <BibtexButton bibtex={toBibtex(paper)} />
+          </div>
 
           {/* Abstract */}
           {paper.abstract && (
