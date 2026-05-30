@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DBLP Search - Academic Paper Search",
-  description: "Search computer science academic papers from DBLP",
+  title: "Oxide Search",
+  description: "Academic paper search powered by Meilisearch",
 };
 
 export default function RootLayout({

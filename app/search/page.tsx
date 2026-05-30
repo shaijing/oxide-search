@@ -173,7 +173,7 @@ export default function SearchPage() {
             <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center">
               <span className="text-white font-bold text-xs">D</span>
             </div>
-            <span className="text-base font-semibold text-gray-900">DBLP Search</span>
+            <span className="text-base font-semibold text-gray-900">Oxide Search</span>
           </Link>
           <a
             href="https://dblp.org"
