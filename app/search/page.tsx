@@ -11,7 +11,7 @@ import {
   Stats,
   Highlight,
 } from 'react-instantsearch'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch'
 import Link from 'next/link'
 
@@ -79,32 +79,82 @@ function Hits() {
 /* ─── Year Range Filter ─── */
 
 function YearRange() {
-  const { start, range, refine, canRefine } = useRange({ attribute: 'year' })
-  const [from, to] = start ?? []
+  const { start, range, refine } = useRange({ attribute: 'year' })
+  const [from, to] = start ?? [undefined, undefined]
+  const [inputFrom, setInputFrom] = useState('')
+  const [inputTo, setInputTo] = useState('')
+
+  // Fetch actual min/max from index for display
+  const [displayBounds, setDisplayBounds] = useState<{ min: number; max: number } | null>(null)
+  useEffect(() => {
+    fetch(process.env.NEXT_PUBLIC_MEILISEARCH_URL + '/indexes/dblp/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_MEILISEARCH_KEY,
+      },
+      body: JSON.stringify({ limit: 0, facets: ['year'] }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.facetStats?.year) setDisplayBounds(data.facetStats.year)
+      })
+      .catch(() => {})
+  }, [])
+
+  // Sync local state when refine resets externally (e.g. ClearRefinements)
+  useEffect(() => {
+    const validFrom = Number.isFinite(from) ? String(from) : ''
+    const validTo = Number.isFinite(to) ? String(to) : ''
+    if (validFrom !== inputFrom) setInputFrom(validFrom)
+    if (validTo !== inputTo) setInputTo(validTo)
+  }, [from, to])
+
+  // Fall back to display bounds if range is Infinity
+  const minLabel =
+    Number.isFinite(range.min) ? range.min : displayBounds?.min
+  const maxLabel =
+    Number.isFinite(range.max) ? range.max : displayBounds?.max
 
   return (
     <div>
       <div className="flex items-center gap-2">
         <input
-          type="number"
-          placeholder="From"
-          value={from ?? ''}
-          onChange={(e) => refine([e.target.value ? Number(e.target.value) : undefined, to])}
-          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+          type="text"
+          inputMode="numeric"
+          placeholder={minLabel ? String(minLabel) : 'From'}
+          value={inputFrom}
+          onChange={(e) => {
+            const v = e.target.value
+            setInputFrom(v)
+            refine([
+              v ? Number(v) : undefined,
+              inputTo ? Number(inputTo) : undefined,
+            ])
+          }}
+          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none"
         />
         <span className="text-gray-300 text-xs">–</span>
         <input
-          type="number"
-          placeholder="To"
-          value={to ?? ''}
-          onChange={(e) => refine([from, e.target.value ? Number(e.target.value) : undefined])}
-          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+          type="text"
+          inputMode="numeric"
+          placeholder={maxLabel ? String(maxLabel) : 'To'}
+          value={inputTo}
+          onChange={(e) => {
+            const v = e.target.value
+            setInputTo(v)
+            refine([
+              inputFrom ? Number(inputFrom) : undefined,
+              v ? Number(v) : undefined,
+            ])
+          }}
+          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none"
         />
       </div>
-      {canRefine && range.min != null && range.max != null && (
+      {displayBounds && (
         <div className="flex justify-between mt-1 text-[10px] text-gray-400">
-          <span>{range.min}</span>
-          <span>{range.max}</span>
+          <span>{displayBounds.min}</span>
+          <span>{displayBounds.max}</span>
         </div>
       )}
     </div>
