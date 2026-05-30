@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { toBibtex } from '@/lib/bibtex'
 
 const { searchClient } = instantMeiliSearch(
     process.env.NEXT_PUBLIC_MEILISEARCH_URL!,
@@ -32,6 +33,10 @@ interface SelectionItem {
     authors: string[]
     venue: string
     year: number
+    key?: string
+    ee?: string
+    url?: string
+    pages?: string
 }
 
 const SelectionCtx = createContext<{
@@ -175,8 +180,80 @@ function Hits() {
 function SelectionPanel() {
     const { selected, toggle, clear, count } = useContext(SelectionCtx)
     const [open, setOpen] = useState(true)
+    const [feedback, setFeedback] = useState<string | null>(null)
 
     const isEmpty = count === 0
+    const items = Array.from(selected.values())
+
+    const showFeedback = (msg: string) => {
+        setFeedback(msg)
+        setTimeout(() => setFeedback(null), 1200)
+    }
+
+    const downloadFile = (content: string, filename: string) => {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = filename
+        document.body.appendChild(a); a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }
+
+    const copyText = async (text: string) => {
+        try { await navigator.clipboard.writeText(text) }
+        catch {
+            const ta = document.createElement('textarea')
+            ta.value = text; document.body.appendChild(ta)
+            ta.select(); document.execCommand('copy')
+            document.body.removeChild(ta)
+        }
+    }
+
+    const handleExportBib = useCallback(() => {
+        const bib = items.map((item) => toBibtex(item)).join('\n')
+        downloadFile(bib, 'selected.bib')
+        showFeedback('BibTeX downloaded')
+    }, [items])
+
+    const handleCopyBib = useCallback(async () => {
+        const bib = items.map((item) => toBibtex(item)).join('\n')
+        await copyText(bib)
+        showFeedback('BibTeX copied')
+    }, [items])
+
+    const handleCopyText = useCallback(async () => {
+        const text = items.map((item) => {
+            const authors = item.authors?.slice(0, 3).join(', ') ?? 'Unknown'
+            const suffix = item.authors?.length > 3 ? ' et al.' : ''
+            return `${authors}${suffix}. ${item.title}. ${item.venue}, ${item.year}.`
+        }).join('\n\n')
+        await copyText(text)
+        showFeedback('Text copied')
+    }, [items])
+
+    const handleCopyTitles = useCallback(async () => {
+        const titles = items.map((item) => item.title).join('\n')
+        await copyText(titles)
+        showFeedback('Titles copied')
+    }, [items])
+
+    const handleExportCsv = useCallback(() => {
+        const header = 'title,authors,venue,year,pages,doi,url'
+        const rows = items.map((item) =>
+            [
+                `"${(item.title ?? '').replace(/"/g, '""')}"`,
+                `"${(item.authors ?? []).join('; ').replace(/"/g, '""')}"`,
+                `"${item.venue ?? ''}"`,
+                item.year ?? '',
+                item.pages ?? '',
+                item.ee ?? '',
+                item.url ?? '',
+            ].join(',')
+        ).join('\n')
+        downloadFile(header + '\n' + rows, 'selected.csv')
+        showFeedback('CSV downloaded')
+    }, [items])
 
     return (
         <div className={`border rounded-lg bg-card overflow-hidden ${isEmpty ? 'border-dashed border-border/40' : 'border-border/60'}`}>
@@ -194,9 +271,7 @@ function SelectionPanel() {
                 {!isEmpty && (
                     <div className="flex items-center gap-2">
                         <span onClick={(e) => { e.stopPropagation(); clear() }}
-                            className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                            Clear all
-                        </span>
+                            className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">Clear all</span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                             className={`transition-transform ${open ? 'rotate-180' : ''}`}>
                             <polyline points="6 9 12 15 18 9" />
@@ -212,10 +287,59 @@ function SelectionPanel() {
                 </div>
             )}
 
+            {/* Toolbar */}
+            {!isEmpty && (
+                <div className="border-t border-border/30 bg-muted/20">
+                    {/* Feedback toast */}
+                    {feedback && (
+                        <div className="px-3 py-1 text-[10px] text-primary font-medium text-center border-b border-border/20">
+                            ✓ {feedback}
+                        </div>
+                    )}
+                    <div className="px-2 py-1.5 flex flex-wrap gap-x-1 gap-y-0.5">
+                        <button onClick={handleCopyBib}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                            BibTeX
+                        </button>
+                        <button onClick={handleExportBib}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            .bib
+                        </button>
+                        <button onClick={handleCopyText}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            Text
+                        </button>
+                        <button onClick={handleCopyTitles}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+                            </svg>
+                            Titles
+                        </button>
+                        <button onClick={handleExportCsv}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            CSV
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* List */}
             {!isEmpty && open && (
-                <div className="max-h-[calc(100vh-10rem)] overflow-y-auto overscroll-contain">
-                    {Array.from(selected.values()).map((item) => (
+                <div className="max-h-[calc(100vh-14rem)] overflow-y-auto overscroll-contain">
+                    {items.map((item) => (
                         <div key={item.id} className="flex items-start gap-2 px-3 py-2 border-t border-border/30 hover:bg-muted/30 group">
                             <Link href={`/paper/${item.id}`} className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
@@ -329,6 +453,10 @@ export default function SearchPage() {
                     authors: hit.authors ?? [],
                     venue: hit.venue,
                     year: hit.year,
+                    key: hit.key,
+                    ee: hit.ee,
+                    url: hit.url,
+                    pages: hit.pages,
                 })
             }
             return next
