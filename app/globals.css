@@ -5,11 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: #f8f6f2;
+  --color-background: #f8f9fa;
   --font-sans: var(--font-sans);
   --font-mono: 'IBM Plex Mono', monospace;
-  --font-serif: 'IBM Plex Serif', Georgia, serif;
-  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -44,191 +42,121 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
 
-::selection { background: hsl(var(--primary)); color: white; }
+::selection { background: #1a73e8; color: white; }
 
-/* ── InstantSearch overrides ── */
+/* ── Semantic Scholar inspired InstantSearch overrides ── */
 
 .ais-SearchBox-form {
-  position: relative;
-  display: flex;
-  align-items: center;
+  position: relative; display: flex; align-items: center;
 }
 .ais-SearchBox-input {
   width: 100% !important;
   padding: 0.75rem 1rem 0.75rem 2.75rem !important;
-  font-size: 0.9rem !important;
-  border: 1.5px solid #e2ddd4 !important;
+  font-size: 0.95rem !important;
+  border: 2px solid #e2e8f0 !important;
   border-radius: 10px !important;
   background: white !important;
-  color: #1a1a2e !important;
+  color: #1a202c !important;
   outline: none !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
 }
 .ais-SearchBox-input:focus {
-  border-color: #c14b3f !important;
-  box-shadow: 0 0 0 3px rgba(193, 75, 63, 0.1) !important;
+  border-color: #1a73e8 !important;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12) !important;
 }
-.ais-SearchBox-input::placeholder { color: #a0988c !important; }
+.ais-SearchBox-input::placeholder { color: #a0aec0 !important; }
 .ais-SearchBox-submit {
   position: absolute; left: 0.75rem; top: 50%;
   transform: translateY(-50%);
-  background: none; border: none;
-  color: #a0988c; cursor: pointer;
+  background: none; border: none; color: #a0aec0; cursor: pointer;
 }
-.ais-SearchBox-reset {
+.ais-SearchBox-reset, .ais-SearchBox-loadingIndicator {
   position: absolute; right: 0.75rem; top: 50%;
   transform: translateY(-50%);
-  background: none; border: none;
-  color: #a0988c; cursor: pointer;
-}
-.ais-SearchBox-loadingIndicator {
-  position: absolute; right: 0.75rem; top: 50%;
-  transform: translateY(-50%);
+  background: none; border: none; color: #a0aec0; cursor: pointer;
 }
 
 /* RefinementList */
-.ais-RefinementList-checkbox { accent-color: #c14b3f; }
+.ais-RefinementList-checkbox { accent-color: #1a73e8; }
 .ais-RefinementList-item--selected .ais-RefinementList-labelText {
-  font-weight: 600;
-  color: #1a1a2e;
+  font-weight: 600; color: #1a202c;
 }
 
-/* CurrentRefinements */
-.ais-CurrentRefinements-list {
-  display: flex; flex-wrap: wrap; gap: 0.375rem;
-}
+/* CurrentRefinements - pill style */
 .ais-CurrentRefinements-item {
   display: inline-flex; align-items: center; gap: 0.25rem;
-  padding: 0.2rem 0.625rem;
-  font-size: 0.75rem;
-  background: #f0ebe4;
-  color: #6b5d52;
-  border-radius: 9999px;
+  padding: 0.2rem 0.625rem; font-size: 0.75rem;
+  background: #e8f0fe; color: #1a73e8; border-radius: 9999px;
 }
 .ais-CurrentRefinements-delete {
-  background: none; border: none;
-  color: #6b5d52; cursor: pointer;
-  font-size: 1em; line-height: 1; padding: 0 0.125rem;
-  opacity: 0.6;
+  background: none; border: none; color: #1a73e8;
+  cursor: pointer; font-size: 1em; line-height: 1;
+  padding: 0 0.125rem; opacity: 0.6;
 }
 .ais-CurrentRefinements-delete:hover { opacity: 1; }
-.ais-CurrentRefinements-category {
-  display: inline-flex; align-items: center; gap: 0.25rem;
-}
 .ais-CurrentRefinements-categoryLabel { font-weight: 500; }
 
 /* Stats */
-.ais-Stats-text {
-  font-size: 0.8rem;
-  color: #8a7e72;
-}
+.ais-Stats-text { font-size: 0.8rem; color: #718096; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d4cdc4; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #b8afa4; }
+::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
 
-/* RefinementList search input */
+/* RefinementList search */
 .ais-RefinementList-searchBox .ais-SearchBox-input {
   padding: 0.4rem 0.5rem 0.4rem 1.75rem !important;
-  font-size: 0.75rem !important;
-  border-radius: 6px !important;
+  font-size: 0.75rem !important; border-radius: 6px !important;
 }
-.ais-RefinementList-searchBox .ais-SearchBox-submit {
-  left: 0.375rem !important;
-}
+.ais-RefinementList-searchBox .ais-SearchBox-submit { left: 0.375rem !important; }
 .ais-RefinementList-searchBox .ais-SearchBox-submit svg {
-  width: 12px !important;
-  height: 12px !important;
+  width: 12px !important; height: 12px !important;
 }
 
-/* Prevent scroll chaining on venue list */
-.venue-scroll {
-  overscroll-behavior: contain;
-}
+.venue-scroll { overscroll-behavior: contain; }
+
+/* ── CSS Variables: Semantic Scholar inspired ── */
 
 :root {
-  --background: oklch(0.97 0.005 75);
-  --foreground: oklch(0.15 0.02 280);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 280);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 280);
-  --primary: oklch(0.48 0.14 30);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.94 0.01 70);
-  --secondary-foreground: oklch(0.35 0.02 60);
-  --muted: oklch(0.94 0.01 70);
-  --muted-foreground: oklch(0.55 0.02 60);
-  --accent: oklch(0.94 0.01 70);
-  --accent-foreground: oklch(0.35 0.02 60);
-  --destructive: oklch(0.58 0.2 30);
-  --border: oklch(0.89 0.01 70);
-  --input: oklch(0.89 0.01 70);
-  --ring: oklch(0.48 0.14 30);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0.02 280);
-  --sidebar-primary: oklch(0.15 0.02 280);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.94 0.01 70);
-  --sidebar-accent-foreground: oklch(0.35 0.02 60);
-  --sidebar-border: oklch(0.89 0.01 70);
-  --sidebar-ring: oklch(0.55 0.02 60);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #f8f9fa;
+  --foreground: #1a202c;
+  --card: #ffffff;
+  --card-foreground: #1a202c;
+  --popover: #ffffff;
+  --popover-foreground: #1a202c;
+  --primary: #1a73e8;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f0fe;
+  --secondary-foreground: #1a73e8;
+  --muted: #f1f3f5;
+  --muted-foreground: #718096;
+  --accent: #e8f0fe;
+  --accent-foreground: #1a73e8;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #1a73e8;
+  --radius: 0.5rem;
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #1a202c;
+  --sidebar-primary: #1a73e8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f0fe;
+  --sidebar-accent-foreground: #1a73e8;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #1a73e8;
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+  html { @apply font-sans; }
 }

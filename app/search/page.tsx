@@ -15,8 +15,6 @@ import { useRef, useEffect, useState, createContext, useContext, useCallback } f
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch'
 import Link from 'next/link'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toBibtex } from '@/lib/bibtex'
 
@@ -59,14 +57,8 @@ const SearchIcon = () => (
     </svg>
 )
 
-const ArrowUpRight = () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 7h10v10" /><path d="M7 17 17 7" />
-    </svg>
-)
-
 const CheckIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12" />
     </svg>
 )
@@ -84,58 +76,47 @@ function PaperHit({ hit }: { hit: any }) {
     const isChecked = selected.has(hit.id)
 
     return (
-        <Card className={`group transition-all ${isChecked ? 'ring-1 ring-primary border-primary/40' : 'border-border/60 hover:border-border hover:shadow-sm'}`}>
-            <CardContent className="p-4">
-                <div className="flex gap-3">
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                        <Link href={`/paper/${hit.id}`}>
-                            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug mb-2">
+        <div className={`px-4 py-3 transition-colors ${isChecked ? 'bg-blue-100/60' : ''}`}>
+            <div className="flex gap-3">
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2">
+                        <Link href={`/paper/${hit.id}`} className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-foreground leading-snug group-hover:text-primary transition-colors">
                                 <Highlight attribute="title" hit={hit} />
                             </h3>
                         </Link>
-
-                        {hit.authors && hit.authors.length > 0 && (
-                            <p className="text-sm text-muted-foreground leading-relaxed mb-2.5">
-                                {hit.authors.slice(0, 6).join(', ')}
-                                {hit.authors.length > 6 && <span className="text-muted-foreground/60"> et al.</span>}
-                            </p>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <Badge variant="secondary" className="font-medium text-xs px-2 py-0.5">
-                                {hit.venue}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{hit.year}</span>
-                            {hit.pages && <span className="text-xs text-muted-foreground/70">pp. {hit.pages}</span>}
-                            {hit.ee && (
-                                <a href={hit.ee} target="_blank" rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-xs text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-0.5">
-                                    DOI <ArrowUpRight />
-                                </a>
-                            )}
-                        </div>
+                        {/* Checkbox */}
+                        <label onClick={(e) => e.stopPropagation()} className="relative mt-0.5 flex-shrink-0">
+                            <input type="checkbox" checked={isChecked} onChange={() => toggle(hit)} className="peer sr-only" />
+                            <div className="w-3.5 h-3.5 rounded border-2 border-muted-foreground/30 bg-card peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center transition-all cursor-pointer hover:border-primary">
+                                {isChecked && <CheckIcon />}
+                            </div>
+                        </label>
                     </div>
 
-                    {/* Checkbox */}
-                    <label
-                        onClick={(e) => e.stopPropagation()}
-                        className="relative mt-0.5 flex-shrink-0"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggle(hit)}
-                            className="peer sr-only"
-                        />
-                        <div className="w-4 h-4 rounded border border-muted-foreground/40 bg-card peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center transition-colors cursor-pointer hover:border-primary">
-                            {isChecked && <CheckIcon />}
-                        </div>
-                    </label>
+                    {hit.authors && hit.authors.length > 0 && (
+                        <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
+                            {hit.authors.slice(0, 6).join(', ')}
+                            {hit.authors.length > 6 && <span className="text-muted-foreground/40"> et al.</span>}
+                        </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        <span className="text-[11px] font-medium text-primary">{hit.venue}</span>
+                        <span className="text-[11px] text-muted-foreground">{hit.year}</span>
+                        {hit.pages && <span className="text-[11px] text-muted-foreground/50">· pp. {hit.pages}</span>}
+                        {hit.ee && (
+                            <a href={hit.ee} target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[11px] text-muted-foreground/50 hover:text-primary transition-colors">
+                                DOI
+                            </a>
+                        )}
+                    </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
 
@@ -158,9 +139,10 @@ function Hits() {
     }, [isLastPage, showMore])
 
     return (
-        <div className="space-y-3">
+        <div>
             {items.map((hit, i) => (
-                <div key={hit.id ?? `hit-${i}`} className="animate-in" style={{ animationDelay: `${i * 25}ms` }}>
+                <div key={hit.id ?? `hit-${i}`} className={`animate-in ${i % 2 === 0 ? 'bg-white' : 'bg-blue-50/30'}`}
+                    style={{ animationDelay: `${i * 15}ms` }}>
                     <PaperHit hit={hit} />
                 </div>
             ))}
@@ -256,7 +238,7 @@ function SelectionPanel() {
     }, [items])
 
     return (
-        <div className={`border rounded-lg bg-card overflow-hidden ${isEmpty ? 'border-dashed border-border/40' : 'border-border/60'}`}>
+        <div className={`border rounded-lg bg-card overflow-hidden ${isEmpty ? 'border-dashed border-border' : 'border shadow-sm'}`}>
             {/* Header */}
             <button
                 onClick={() => setOpen(!open)}
@@ -289,7 +271,7 @@ function SelectionPanel() {
 
             {/* Toolbar */}
             {!isEmpty && (
-                <div className="border-t border-border/30 bg-muted/20">
+                <div className="border-t border-border bg-muted/50">
                     {/* Feedback toast */}
                     {feedback && (
                         <div className="px-3 py-1 text-[10px] text-primary font-medium text-center border-b border-border/20">
@@ -469,16 +451,16 @@ export default function SearchPage() {
         <SelectionCtx.Provider value={{ selected, toggle, clear, count: selected.size }}>
             <div className="min-h-screen bg-background">
                 {/* Header */}
-                <header className="bg-card border-b border-border sticky top-0 z-10">
+                <header className="bg-white border-b border-border sticky top-0 z-10">
                     <div className="max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
                         <Link href="/search" className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                                 <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>O</span>
                             </div>
                             <span className="text-lg font-semibold text-foreground" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>Oxide Search</span>
                         </Link>
                         <a href="https://dblp.org" target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors">data via DBLP</a>
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors">data via DBLP</a>
                     </div>
                 </header>
 
@@ -499,7 +481,7 @@ export default function SearchPage() {
                         {/* Active filters */}
                         <div className="mb-4"><CurrentRefinementsWithClear /></div>
 
-                        <div className="flex gap-6 items-start w-3/4 mx-auto">
+                        <div className="flex gap-6 items-start w-2/3 mx-auto">
                             {/* Left: Selection sidebar */}
                             <aside className="w-52 flex-shrink-0 self-start max-lg:hidden lg:sticky lg:top-[calc(3.5rem+1.5rem)]">
                                 <SelectionPanel />
@@ -528,7 +510,7 @@ export default function SearchPage() {
                                                     checkbox: 'w-3.5 h-3.5 rounded border-muted-foreground/40',
                                                     label: 'flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground text-xs',
                                                     count: 'ml-auto text-[10px] text-muted-foreground/60 bg-secondary px-1.5 py-0.5 rounded',
-                                                    searchBox: 'mb-1.5', showMore: 'mt-1 text-xs text-muted-foreground hover:text-primary transition-colors',
+                                                    searchBox: 'mb-1.5', showMore: 'mt-1 text-xs text-primary hover:text-primary/80 transition-colors',
                                                 }} />
                                         </div>
                                     </div>
