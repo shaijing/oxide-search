@@ -15,6 +15,10 @@ import { useRef, useEffect, useState } from 'react'
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch'
 import Link from 'next/link'
 
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+
 const { searchClient } = instantMeiliSearch(
   process.env.NEXT_PUBLIC_MEILISEARCH_URL!,
   process.env.NEXT_PUBLIC_MEILISEARCH_KEY!
@@ -29,7 +33,7 @@ const SearchIcon = () => (
 )
 
 const ArrowUpRight = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M7 7h10v10" /><path d="M7 17 17 7" />
   </svg>
 )
@@ -38,46 +42,43 @@ const ArrowUpRight = () => (
 
 function PaperHit({ hit }: { hit: any }) {
   return (
-    <div className="group bg-white rounded-lg border border-[#e8e2d9] hover:border-[#d4cbc0] hover:shadow-sm transition-all">
-      <div className="p-4">
-        {/* Title */}
+    <Card className="group border-border/60 hover:border-border hover:shadow-sm transition-all">
+      <CardContent className="p-4">
         <Link href={`/paper/${hit.id}`}>
-          <h3 className="text-base font-semibold text-[#1a1a2e] group-hover:text-[#c14b3f] transition-colors leading-snug mb-2">
+          <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug mb-2">
             <Highlight attribute="title" hit={hit} />
           </h3>
         </Link>
 
-        {/* Authors */}
         {hit.authors && hit.authors.length > 0 && (
-          <p className="text-sm text-[#6b5d52] leading-relaxed mb-2.5">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-2.5">
             {hit.authors.slice(0, 6).join(', ')}
-            {hit.authors.length > 6 && (
-              <span className="text-[#a0988c]"> et al.</span>
-            )}
+            {hit.authors.length > 6 && <span className="text-muted-foreground/60"> et al.</span>}
           </p>
         )}
 
-        {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <span className="px-2 py-0.5 bg-[#f0ebe4] text-[#6b5d52] rounded font-medium">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Badge variant="secondary" className="font-medium text-xs px-2 py-0.5">
             {hit.venue}
-          </span>
-          <span className="text-[#8a7e72]">{hit.year}</span>
-          {hit.pages && <span className="text-[#a0988c]">pp. {hit.pages}</span>}
+          </Badge>
+          <span className="text-xs text-muted-foreground">{hit.year}</span>
+          {hit.pages && (
+            <span className="text-xs text-muted-foreground/70">pp. {hit.pages}</span>
+          )}
           {hit.ee && (
             <a
               href={hit.ee}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-[#8a7e72] hover:text-[#c14b3f] transition-colors inline-flex items-center gap-0.5"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-0.5"
             >
               DOI <ArrowUpRight />
             </a>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -108,8 +109,8 @@ function Hits() {
       ))}
       {items.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[#8a7e72]">No papers match your search.</p>
-          <p className="text-sm text-[#a0988c] mt-1">Try adjusting your filters or search terms.</p>
+          <p className="text-muted-foreground">No papers match your search.</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">Try adjusting your filters or search terms.</p>
         </div>
       )}
       <div ref={sentinelRef} />
@@ -162,9 +163,9 @@ function YearRange() {
             setInputFrom(v)
             refine([v ? Number(v) : undefined, inputTo ? Number(inputTo) : undefined])
           }}
-          className="w-full px-2.5 py-1.5 text-xs bg-white border border-[#e2ddd4] rounded-md focus:border-[#c14b3f] focus:outline-none focus:ring-2 focus:ring-[#c14b3f]/10"
+          className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         />
-        <span className="text-[#c4bbb0] text-xs">–</span>
+        <span className="text-muted-foreground/40 text-xs">–</span>
         <input
           type="text" inputMode="numeric"
           placeholder={maxLabel ? String(maxLabel) : 'To'}
@@ -174,11 +175,11 @@ function YearRange() {
             setInputTo(v)
             refine([inputFrom ? Number(inputFrom) : undefined, v ? Number(v) : undefined])
           }}
-          className="w-full px-2.5 py-1.5 text-xs bg-white border border-[#e2ddd4] rounded-md focus:border-[#c14b3f] focus:outline-none focus:ring-2 focus:ring-[#c14b3f]/10"
+          className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         />
       </div>
       {displayBounds && (
-        <div className="flex justify-between mt-1.5 text-[10px] text-[#a0988c]">
+        <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground/60">
           <span>{displayBounds.min}</span>
           <span>{displayBounds.max}</span>
         </div>
@@ -193,9 +194,33 @@ function ClearButton() {
   const { canRefine, refine } = useClearRefinements()
   if (!canRefine) return null
   return (
-    <button onClick={refine} className="text-xs text-[#8a7e72] hover:text-[#c14b3f] transition-colors">
+    <button onClick={refine} className="text-xs text-muted-foreground hover:text-primary transition-colors">
       Clear all
     </button>
+  )
+}
+
+/* ─── Current Refinements + Clear ─── */
+
+function CurrentRefinementsWithClear() {
+  const { canRefine, refine } = useClearRefinements()
+  return (
+    <div className="flex items-center gap-2">
+      <CurrentRefinements
+        classNames={{
+          list: 'flex flex-wrap gap-1.5',
+          item: 'inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-secondary text-secondary-foreground rounded-full',
+          delete: 'ml-0.5 hover:text-primary font-bold leading-none',
+          categoryLabel: 'font-medium',
+        }}
+      />
+      {canRefine && (
+        <button onClick={refine}
+          className="text-xs text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
+          Clear all
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -203,20 +228,20 @@ function ClearButton() {
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen bg-[#f8f6f2]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-[#e8e2d9] sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/search" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#1a1a2e] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>O</span>
+            <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>O</span>
             </div>
-            <span className="text-lg font-semibold text-[#1a1a2e]" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>
+            <span className="text-lg font-semibold text-foreground" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>
               Oxide Search
             </span>
           </Link>
           <a href="https://dblp.org" target="_blank" rel="noopener noreferrer"
-            className="text-xs text-[#a0988c] hover:text-[#6b5d52] transition-colors">
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             data via DBLP
           </a>
         </div>
@@ -231,9 +256,9 @@ export default function SearchPage() {
               classNames={{
                 root: 'w-full max-w-xl',
                 form: 'relative',
-                input: 'w-full px-4 py-3 pl-10 text-sm bg-white border-2 border-[#e2ddd4] rounded-xl focus:border-[#c14b3f] focus:outline-none transition-colors shadow-sm',
-                submit: 'absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0988c]',
-                reset: 'absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a0988c]',
+                input: 'w-full px-4 py-3 pl-10 text-sm bg-card border-2 border-input rounded-xl focus:border-ring focus:outline-none transition-colors shadow-sm',
+                submit: 'absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground',
+                reset: 'absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground',
               }}
               submitIconComponent={() => <SearchIcon />}
             />
@@ -244,27 +269,28 @@ export default function SearchPage() {
             <CurrentRefinementsWithClear />
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Results column */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Results */}
             <div className="flex-1 min-w-0">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4">
                 <Stats />
               </div>
               <Hits />
             </div>
 
-            {/* Sidebar filters */}
-            <aside className="w-full lg:w-56 flex-shrink-0">
-              <div className="lg:sticky lg:top-20 space-y-6">
+            {/* Sidebar */}
+            <aside className="w-full lg:w-56 lg:sticky lg:top-[calc(3.5rem+1.5rem)] flex-shrink-0
+              max-lg:border-t max-lg:border-border max-lg:pt-5 max-lg:mt-2">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold text-[#8a7e72] uppercase tracking-wider">Filters</h3>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filters</h3>
                   <ClearButton />
                 </div>
 
                 {/* Venue */}
-                <section>
-                  <h4 className="text-sm font-medium text-[#4a3f35] mb-2.5">Venue</h4>
-                  <div className="max-h-60 overflow-y-auto">
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-2">Venue</h4>
+                  <div className="max-h-52 overflow-y-auto pr-1 venue-scroll">
                     <RefinementList
                       attribute="venue"
                       searchable
@@ -272,30 +298,31 @@ export default function SearchPage() {
                       showMore
                       classNames={{
                         root: 'text-sm',
-                        list: 'space-y-1',
-                        item: 'flex items-center gap-1.5',
-                        checkbox: 'w-3.5 h-3.5 rounded border-[#d4cbc0]',
-                        label: 'flex items-center gap-1.5 cursor-pointer text-[#6b5d52] hover:text-[#1a1a2e] text-xs',
-                        count: 'ml-auto text-[10px] text-[#a0988c] bg-[#f0ebe4] px-1.5 py-0.5 rounded',
-                        searchBox: 'mb-2',
-                        showMore: 'mt-2 text-xs text-[#8a7e72] hover:text-[#c14b3f] transition-colors',
+                        list: 'space-y-0.5',
+                        item: 'flex items-center gap-1.5 py-0.5',
+                        checkbox: 'w-3.5 h-3.5 rounded border-muted-foreground/40',
+                        label: 'flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground text-xs',
+                        count: 'ml-auto text-[10px] text-muted-foreground/60 bg-secondary px-1.5 py-0.5 rounded',
+                        searchBox: 'mb-1.5',
+                        showMore: 'mt-1 text-xs text-muted-foreground hover:text-primary transition-colors',
                       }}
                     />
                   </div>
-                </section>
+                </div>
+
+                <Separator />
 
                 {/* Year */}
-                <section>
-                  <h4 className="text-sm font-medium text-[#4a3f35] mb-2.5">Year</h4>
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-2">Year</h4>
                   <YearRange />
-                </section>
+                </div>
               </div>
             </aside>
           </div>
         </InstantSearch>
       </main>
 
-      {/* Animations */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(6px); }
@@ -306,30 +333,6 @@ export default function SearchPage() {
           opacity: 0;
         }
       `}</style>
-    </div>
-  )
-}
-
-/* ─── Current Refinements + Clear ─── */
-
-function CurrentRefinementsWithClear() {
-  const { canRefine, refine } = useClearRefinements()
-  return (
-    <div className="flex items-center gap-2">
-      <CurrentRefinements
-        classNames={{
-          list: 'flex flex-wrap gap-1.5',
-          item: 'inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-[#f0ebe4] text-[#6b5d52] rounded-full',
-          delete: 'ml-0.5 hover:text-[#c14b3f] font-bold leading-none',
-          categoryLabel: 'font-medium',
-        }}
-      />
-      {canRefine && (
-        <button onClick={refine}
-          className="text-xs text-[#a0988c] hover:text-[#c14b3f] transition-colors flex-shrink-0">
-          Clear all
-        </button>
-      )}
     </div>
   )
 }

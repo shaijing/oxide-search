@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export function BibtexButton({ bibtex }: { bibtex: string }) {
   const [copied, setCopied] = useState(false)
@@ -11,7 +12,6 @@ export function BibtexButton({ bibtex }: { bibtex: string }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
-      // Fallback: select-less copy
       const ta = document.createElement('textarea')
       ta.value = bibtex
       document.body.appendChild(ta)
@@ -37,10 +37,7 @@ export function BibtexButton({ bibtex }: { bibtex: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={handleCopy}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#6b5d52] bg-[#f5f0ea] hover:bg-[#ece4db] rounded-lg transition-colors"
-      >
+      <Button variant="secondary" size="sm" onClick={handleCopy}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           {copied
             ? <><polyline points="20 6 9 17 4 12" /></>
@@ -48,18 +45,15 @@ export function BibtexButton({ bibtex }: { bibtex: string }) {
           }
         </svg>
         {copied ? 'Copied!' : 'BibTeX'}
-      </button>
-      <button
-        onClick={handleDownload}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#6b5d52] bg-[#f5f0ea] hover:bg-[#ece4db] rounded-lg transition-colors"
-      >
+      </Button>
+      <Button variant="secondary" size="sm" onClick={handleDownload}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
         .bib
-      </button>
+      </Button>
     </div>
   )
 }
