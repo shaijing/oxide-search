@@ -20,24 +20,62 @@ const { searchClient } = instantMeiliSearch(
   process.env.NEXT_PUBLIC_MEILISEARCH_KEY!
 )
 
+/* ─── Icons ─── */
+
+const SearchIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+  </svg>
+)
+
+const ArrowUpRight = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 7h10v10" /><path d="M7 17 17 7" />
+  </svg>
+)
+
 /* ─── Paper Card ─── */
 
 function PaperHit({ hit }: { hit: any }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all p-4">
-      <Link href={`/paper/${hit.id}`} className="block">
-        <h3 className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors mb-1.5 leading-snug">
-          <Highlight attribute="title" hit={hit} />
-        </h3>
-      </Link>
-      <p className="text-sm text-gray-500 mb-2 leading-relaxed">
-        {hit.authors?.slice(0, 5).join(', ')}
-        {hit.authors?.length > 5 && ' et al.'}
-      </p>
-      <div className="flex items-center gap-2.5 text-xs">
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">{hit.venue}</span>
-        <span className="text-gray-400">{hit.year}</span>
-        {hit.pages && <span className="text-gray-400">pp. {hit.pages}</span>}
+    <div className="group bg-white rounded-lg border border-[#e8e2d9] hover:border-[#d4cbc0] hover:shadow-sm transition-all">
+      <div className="p-4">
+        {/* Title */}
+        <Link href={`/paper/${hit.id}`}>
+          <h3 className="text-base font-semibold text-[#1a1a2e] group-hover:text-[#c14b3f] transition-colors leading-snug mb-2">
+            <Highlight attribute="title" hit={hit} />
+          </h3>
+        </Link>
+
+        {/* Authors */}
+        {hit.authors && hit.authors.length > 0 && (
+          <p className="text-sm text-[#6b5d52] leading-relaxed mb-2.5">
+            {hit.authors.slice(0, 6).join(', ')}
+            {hit.authors.length > 6 && (
+              <span className="text-[#a0988c]"> et al.</span>
+            )}
+          </p>
+        )}
+
+        {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <span className="px-2 py-0.5 bg-[#f0ebe4] text-[#6b5d52] rounded font-medium">
+            {hit.venue}
+          </span>
+          <span className="text-[#8a7e72]">{hit.year}</span>
+          {hit.pages && <span className="text-[#a0988c]">pp. {hit.pages}</span>}
+          {hit.ee && (
+            <a
+              href={hit.ee}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[#8a7e72] hover:text-[#c14b3f] transition-colors inline-flex items-center gap-0.5"
+            >
+              DOI <ArrowUpRight />
+            </a>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -64,19 +102,22 @@ function Hits() {
   return (
     <div className="space-y-3">
       {items.map((hit, i) => (
-        <div key={hit.id ?? `hit-${i}`}>
+        <div key={hit.id ?? `hit-${i}`} className="animate-in" style={{ animationDelay: `${i * 25}ms` }}>
           <PaperHit hit={hit} />
         </div>
       ))}
       {items.length === 0 && (
-        <p className="text-center py-12 text-sm text-gray-400">No papers found</p>
+        <div className="text-center py-16">
+          <p className="text-[#8a7e72]">No papers match your search.</p>
+          <p className="text-sm text-[#a0988c] mt-1">Try adjusting your filters or search terms.</p>
+        </div>
       )}
       <div ref={sentinelRef} />
     </div>
   )
 }
 
-/* ─── Year Range Filter ─── */
+/* ─── Year Range ─── */
 
 function YearRange() {
   const { start, range, refine } = useRange({ attribute: 'year' })
@@ -84,7 +125,6 @@ function YearRange() {
   const [inputFrom, setInputFrom] = useState('')
   const [inputTo, setInputTo] = useState('')
 
-  // Fetch actual min/max from index for display
   const [displayBounds, setDisplayBounds] = useState<{ min: number; max: number } | null>(null)
   useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_MEILISEARCH_URL + '/indexes/dblp/search', {
@@ -96,13 +136,10 @@ function YearRange() {
       body: JSON.stringify({ limit: 0, facets: ['year'] }),
     })
       .then((r) => r.json())
-      .then((data) => {
-        if (data.facetStats?.year) setDisplayBounds(data.facetStats.year)
-      })
+      .then((data) => { if (data.facetStats?.year) setDisplayBounds(data.facetStats.year) })
       .catch(() => {})
   }, [])
 
-  // Sync local state when refine resets externally (e.g. ClearRefinements)
   useEffect(() => {
     const validFrom = Number.isFinite(from) ? String(from) : ''
     const validTo = Number.isFinite(to) ? String(to) : ''
@@ -110,49 +147,38 @@ function YearRange() {
     if (validTo !== inputTo) setInputTo(validTo)
   }, [from, to])
 
-  // Fall back to display bounds if range is Infinity
-  const minLabel =
-    Number.isFinite(range.min) ? range.min : displayBounds?.min
-  const maxLabel =
-    Number.isFinite(range.max) ? range.max : displayBounds?.max
+  const minLabel = Number.isFinite(range.min) ? range.min : displayBounds?.min
+  const maxLabel = Number.isFinite(range.max) ? range.max : displayBounds?.max
 
   return (
     <div>
       <div className="flex items-center gap-2">
         <input
-          type="text"
-          inputMode="numeric"
+          type="text" inputMode="numeric"
           placeholder={minLabel ? String(minLabel) : 'From'}
           value={inputFrom}
           onChange={(e) => {
             const v = e.target.value
             setInputFrom(v)
-            refine([
-              v ? Number(v) : undefined,
-              inputTo ? Number(inputTo) : undefined,
-            ])
+            refine([v ? Number(v) : undefined, inputTo ? Number(inputTo) : undefined])
           }}
-          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none"
+          className="w-full px-2.5 py-1.5 text-xs bg-white border border-[#e2ddd4] rounded-md focus:border-[#c14b3f] focus:outline-none focus:ring-2 focus:ring-[#c14b3f]/10"
         />
-        <span className="text-gray-300 text-xs">–</span>
+        <span className="text-[#c4bbb0] text-xs">–</span>
         <input
-          type="text"
-          inputMode="numeric"
+          type="text" inputMode="numeric"
           placeholder={maxLabel ? String(maxLabel) : 'To'}
           value={inputTo}
           onChange={(e) => {
             const v = e.target.value
             setInputTo(v)
-            refine([
-              inputFrom ? Number(inputFrom) : undefined,
-              v ? Number(v) : undefined,
-            ])
+            refine([inputFrom ? Number(inputFrom) : undefined, v ? Number(v) : undefined])
           }}
-          className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:border-blue-400 focus:outline-none"
+          className="w-full px-2.5 py-1.5 text-xs bg-white border border-[#e2ddd4] rounded-md focus:border-[#c14b3f] focus:outline-none focus:ring-2 focus:ring-[#c14b3f]/10"
         />
       </div>
       {displayBounds && (
-        <div className="flex justify-between mt-1 text-[10px] text-gray-400">
+        <div className="flex justify-between mt-1.5 text-[10px] text-[#a0988c]">
           <span>{displayBounds.min}</span>
           <span>{displayBounds.max}</span>
         </div>
@@ -161,70 +187,83 @@ function YearRange() {
   )
 }
 
+/* ─── Clear Filters ─── */
+
+function ClearButton() {
+  const { canRefine, refine } = useClearRefinements()
+  if (!canRefine) return null
+  return (
+    <button onClick={refine} className="text-xs text-[#8a7e72] hover:text-[#c14b3f] transition-colors">
+      Clear all
+    </button>
+  )
+}
+
 /* ─── Search Page ─── */
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen bg-[#f5f6fa]">
+    <div className="min-h-screen bg-[#f8f6f2]">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-[#e8e2d9] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/search" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-xs">D</span>
+            <div className="w-8 h-8 bg-[#1a1a2e] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>O</span>
             </div>
-            <span className="text-base font-semibold text-gray-900">Oxide Search</span>
+            <span className="text-lg font-semibold text-[#1a1a2e]" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>
+              Oxide Search
+            </span>
           </Link>
-          <a
-            href="https://dblp.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            dblp.org
+          <a href="https://dblp.org" target="_blank" rel="noopener noreferrer"
+            className="text-xs text-[#a0988c] hover:text-[#6b5d52] transition-colors">
+            data via DBLP
           </a>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <InstantSearch indexName="dblp" searchClient={searchClient}>
-          {/* Search bar row */}
-          <div className="flex items-center gap-4 mb-5">
-            <div className="flex-1 max-w-xl">
-              <SearchBox
-                placeholder="Search papers by title, author, venue…"
-                classNames={{
-                  root: 'w-full',
-                  form: 'relative',
-                  input: 'w-full px-4 py-2.5 pl-10 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors bg-white',
-                  submit: 'absolute left-3 top-1/2 -translate-y-1/2 text-gray-400',
-                  reset: 'absolute right-3 top-1/2 -translate-y-1/2 text-gray-400',
-                  loadingIndicator: 'absolute right-3 top-1/2 -translate-y-1/2',
-                }}
-              />
-            </div>
-            <Stats />
+          {/* Search bar */}
+          <div className="mb-5">
+            <SearchBox
+              placeholder="Search papers by title, author, venue…"
+              classNames={{
+                root: 'w-full max-w-xl',
+                form: 'relative',
+                input: 'w-full px-4 py-3 pl-10 text-sm bg-white border-2 border-[#e2ddd4] rounded-xl focus:border-[#c14b3f] focus:outline-none transition-colors shadow-sm',
+                submit: 'absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0988c]',
+                reset: 'absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a0988c]',
+              }}
+              submitIconComponent={() => <SearchIcon />}
+            />
           </div>
 
-          {/* Active filter tags */}
+          {/* Active filters */}
           <div className="mb-4">
-            <CurrentRefinlementsWithClear />
+            <CurrentRefinementsWithClear />
           </div>
 
-          <div className="flex gap-6">
-            {/* Results */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Results column */}
             <div className="flex-1 min-w-0">
+              <div className="mb-4 flex items-center justify-between">
+                <Stats />
+              </div>
               <Hits />
             </div>
 
             {/* Sidebar filters */}
-            <aside className="w-56 flex-shrink-0">
-              <div className="sticky top-20 space-y-6">
+            <aside className="w-full lg:w-56 flex-shrink-0">
+              <div className="lg:sticky lg:top-20 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-[#8a7e72] uppercase tracking-wider">Filters</h3>
+                  <ClearButton />
+                </div>
+
                 {/* Venue */}
                 <section>
-                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
-                    Venue
-                  </h4>
+                  <h4 className="text-sm font-medium text-[#4a3f35] mb-2.5">Venue</h4>
                   <div className="max-h-60 overflow-y-auto">
                     <RefinementList
                       attribute="venue"
@@ -235,11 +274,11 @@ export default function SearchPage() {
                         root: 'text-sm',
                         list: 'space-y-1',
                         item: 'flex items-center gap-1.5',
-                        checkbox: 'w-3.5 h-3.5 rounded border-gray-300',
-                        label: 'flex items-center gap-1.5 cursor-pointer text-gray-600 hover:text-gray-900 text-xs',
-                        count: 'ml-auto text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded',
+                        checkbox: 'w-3.5 h-3.5 rounded border-[#d4cbc0]',
+                        label: 'flex items-center gap-1.5 cursor-pointer text-[#6b5d52] hover:text-[#1a1a2e] text-xs',
+                        count: 'ml-auto text-[10px] text-[#a0988c] bg-[#f0ebe4] px-1.5 py-0.5 rounded',
                         searchBox: 'mb-2',
-                        showMore: 'mt-2 text-xs text-blue-600 hover:text-blue-800 transition-colors',
+                        showMore: 'mt-2 text-xs text-[#8a7e72] hover:text-[#c14b3f] transition-colors',
                       }}
                     />
                   </div>
@@ -247,9 +286,7 @@ export default function SearchPage() {
 
                 {/* Year */}
                 <section>
-                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
-                    Year
-                  </h4>
+                  <h4 className="text-sm font-medium text-[#4a3f35] mb-2.5">Year</h4>
                   <YearRange />
                 </section>
               </div>
@@ -257,31 +294,39 @@ export default function SearchPage() {
           </div>
         </InstantSearch>
       </main>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+          animation: fadeIn 0.3s ease forwards;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   )
 }
 
 /* ─── Current Refinements + Clear ─── */
 
-function CurrentRefinlementsWithClear() {
+function CurrentRefinementsWithClear() {
   const { canRefine, refine } = useClearRefinements()
-
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <CurrentRefinements
         classNames={{
-          root: 'flex-1',
           list: 'flex flex-wrap gap-1.5',
-          item: 'inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-full',
-          delete: 'ml-0.5 hover:text-blue-900 font-bold leading-none',
+          item: 'inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-[#f0ebe4] text-[#6b5d52] rounded-full',
+          delete: 'ml-0.5 hover:text-[#c14b3f] font-bold leading-none',
           categoryLabel: 'font-medium',
         }}
       />
       {canRefine && (
-        <button
-          onClick={refine}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-        >
+        <button onClick={refine}
+          className="text-xs text-[#a0988c] hover:text-[#c14b3f] transition-colors flex-shrink-0">
           Clear all
         </button>
       )}
