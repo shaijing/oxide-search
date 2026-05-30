@@ -472,8 +472,9 @@ export default function SearchPage() {
                                 classNames={{
                                     root: 'w-full', form: 'relative',
                                     input: 'w-full px-4 py-3 pl-10 text-sm bg-card border-2 border-input rounded-xl focus:border-ring focus:outline-none transition-colors shadow-sm',
-                                    submit: 'absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground',
-                                    reset: 'absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground',
+                                    submit: 'absolute left-3.5 top-0 bottom-0 flex items-center text-muted-foreground',
+                                    reset: 'hidden',
+                                    loadingIndicator: 'absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground',
                                 }}
                                 submitIconComponent={() => <SearchIcon />} />
                         </div>
