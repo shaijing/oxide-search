@@ -7,3 +7,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Package manager
 
 Prefer `bun` for all tasks (install, run, build, test). Fall back to `node`/`npm` only if `bun` is unavailable or fails.
+
+# UI components
+
+Use shadcn/ui. Add components via:
+
+```bash
+bunx --bun shadcn@latest add <component>
+```
+
+Import from `@/components/ui/<component>`. Already initialized — no need to re-run `init`.
